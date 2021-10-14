@@ -4,7 +4,12 @@ const {Router} = require('express')
 const firebase = require('firebase')
 firebase.initializeApp(config)
 const route = Router()
-const {validateSignupData} = require('../util/validators')
+const {
+    validateSignupData,
+    validateLogindata,
+    reduceUserDetails
+} = require('../util/validators')
+const FBAuth = require('../util/fbAuth')
 
 route.post('/signup', (req,res)=>{
     const newUser = {
@@ -52,6 +57,92 @@ route.post('/signup', (req,res)=>{
         })
 })
 
+route.post('/login' , (req,res)=>{
+    const user = {
+        email: req.body.email,
+        password: req.body.password
+    }
+    const {valid , errors} = validateLogindata(user)
+    if(!valid) return res.status(400).json(errors)
+
+    firebase
+        .auth()
+        .signInWithEmailAndPassword(user.email, user.password)
+        .then(data =>{
+            return data.user.getIdToken()
+        })
+        .then(token =>{
+            res.json({token})
+        })
+        .catch(err =>{
+            console.error(err)
+            return res.status(403).json({general: "Wrong credentails, please try again later"})
+        })
+})
+
+route.get('/:handle' , (req,res)=>{
+    let userData = {}
+    db.doc(`/users/${req.params.handle}`)
+        .get()
+        .then(doc =>{
+            if(doc.exists){
+                userData = doc.data()
+                return db
+                    .collection('screams')
+                    .where('handle','==',req.params.handle)
+                    .get()
+            }
+            else{
+                return res.status(400).json({error: "user not found"})
+            }
+        })
+        .then(data =>{
+            userData.screams = []
+            data.forEach(doc => {
+                userData.screams.push({
+                    body: doc.data().body,
+                    isexist: doc.data().isexist,
+                    createdAt: doc.data().createdAt,
+                    handle: doc.data().handle,
+                    screamId: doc.id
+                })
+            });
+            return res.json(userData)
+        })
+        .then(err =>{
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+})
+
+route.post('/' , FBAuth , (req,res)=>{
+    let userDetails = reduceUserDetails(req.body)
+    db.doc(`/users/${req.user.handle}`)
+        .update(userDetails)
+        .then(()=>{
+            return res.json({message: "Details added successfully"})
+        })
+        .catch(err =>{
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+})
+
+route.get('/' , FBAuth , (req , res)=>{
+    let userData = {}
+    db.doc(`users/${req.user.handle}`)
+        .get()
+        .then(doc =>{
+            if(doc.exists){
+                userData.credentials = doc.data()
+                return res.json(userData)
+            }
+        })
+        .catch(err =>{
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+})
 
 module.exports = {
     UserRoute: route
