@@ -24,7 +24,7 @@ module.exports = (req , res , next) =>{
         .then(dataset =>{
 
             req.user.handle = dataset.docs[0].data().handle
-            req.user.imageUrl = dataset.docs[0].data().imageUrl
+            req.user.rating = dataset.docs[0].data().rating
             return next()
         })
         .catch(err =>{

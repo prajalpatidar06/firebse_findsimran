@@ -1,3 +1,5 @@
+const user = require("../routes/user");
+
 const isEmail = (email) => {
   const regEx =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -47,12 +49,17 @@ function reduceUserDetails(data){
 
   if (!isEmpty(data.bio.trim())) userDetails.bio = data.bio;
   if (!isEmpty(data.website.trim())) {
-    // https://website.com
-    if (data.website.trim().substring(0, 4) !== 'http') {
-      userDetails.website = `http://${data.website.trim()}`;
-    } else userDetails.website = data.website;
+    if (data.website.trim().substring(0, 4) !== 'http') userDetails.website = `http://${data.website.trim()}`
+    else userDetails.website = data.website;
   }
-  if (!isEmpty(data.location.trim())) userDetails.location = data.location;
+  if (!isEmpty(data.gender.trim())) userDetails.gender = data.gender;
+  if (!isEmpty(data.contactNumber.trim())) userDetails.contacNumber = data.contacNumber;
+  userDetails.skills = []
+  data.skills.forEach(skill => {
+    if (!isEmpty(skill.trim())) userDetails.skills.push(skill)
+  });
+  userDetails.onlinePlateform = data.onlinePlateform
+  userDetails.rating = 0
 
   return userDetails;
 }

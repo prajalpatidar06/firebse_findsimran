@@ -100,10 +100,13 @@ route.get('/:handle' , (req,res)=>{
             userData.screams = []
             data.forEach(doc => {
                 userData.screams.push({
+                    title: doc.data().title,
                     body: doc.data().body,
-                    isexist: doc.data().isexist,
                     createdAt: doc.data().createdAt,
-                    handle: doc.data().handle,
+                    handle: doc.data().authorHandle,
+                    rating:doc.data().rating,
+                    requireSkills: doc.data().requireSkills,
+                    url: doc.data().url,
                     screamId: doc.id
                 })
             });
