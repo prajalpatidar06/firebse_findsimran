@@ -3,6 +3,7 @@ const route = Router()
 const {db} = require('../util/admin')
 const FBAuth = require('../util/fbAuth')
 
+// get all screams data
 route.get('/' , (req,res)=>{
     db.collection('screams')
         .orderBy('createdAt' , 'desc')
@@ -25,15 +26,48 @@ route.get('/' , (req,res)=>{
         })
 })
 
-route.get('/:screamId' , (req , res)=>{
-    let screamData = {}
-    db.doc(`/screams/${req.params.screamId}`)
+// get oneScream data by Author
+route.get('/:handle/:screamId' , FBAuth , (req , res)=>{
+    if(req.user.handle !== req.params.handle)
+        return res.status(403).json({error: "unauthorized access"})
+    
+    let screamData
+    db.doc(`screams/${req.params.screamId}`)
         .get()
         .then(doc =>{
             if(!doc.exists)
-                return res.status(404).json({error: "scream not found"})
+                return res.status(404).json({error:"scream not found"})
             screamData = doc.data()
-            screamData.screamId = doc.id
+            return db.collection('votes')
+                .where('screamId','==',req.params.screamId)
+                .get()
+        })
+        .then(data =>{
+            screamData.votes = []
+            data.forEach(doc => {
+                screamData.votes.push(doc.data())
+            });
+            return res.json(screamData)
+        })
+        .catch(err =>{
+            console.error(err)
+            return res.status(500).json(err)
+        })
+})
+
+// get all screams of specific author
+route.get('/:handle' , FBAuth , (req , res)=>{
+    if(req.user.handle !== req.params.handle)
+        return res.status(403).json({error: "unauthorized access"})
+
+    let screamData = []
+    db.collection('screams')
+        .where('handle','==',req.params.handle)
+        .get()
+        .then(docs =>{
+            docs.forEach(doc => {
+                screamData.push(doc.data())
+            });
             return res.status(201).json(screamData)
         })
         .catch(err =>{
@@ -42,6 +76,7 @@ route.get('/:screamId' , (req , res)=>{
         })
 })
 
+// post new scream
 route.post('/' , FBAuth , (req,res)=>{
     if (req.body.body.trim() === '') {
         return res.status(400).json({ body: 'Body must not be empty' });
@@ -54,7 +89,8 @@ route.post('/' , FBAuth , (req,res)=>{
         body: req.body.body,
         requiredSkills: req.body.requiredSkills,
         url: req.body.url,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        status:true,
     }
 
     db.collection('screams')
@@ -70,6 +106,7 @@ route.post('/' , FBAuth , (req,res)=>{
         })
 })
 
+// delete scream
 route.delete('/:screamId' , FBAuth , (req,res)=>{
     const document = db.doc(`screams/${req.params.screamId}`)
     document
@@ -94,6 +131,7 @@ route.delete('/:screamId' , FBAuth , (req,res)=>{
         })
 })
 
+// vote perticular scream
 route.post('/:screamId/vote' , FBAuth , (req,res)=>{
     if(req.body.comment.trim() === '')
         return res.status(400).json({comment: "Must not be empty"})
@@ -123,6 +161,9 @@ route.post('/:screamId/vote' , FBAuth , (req,res)=>{
             return res.status(500).json({error: err.code})
         })
 })
+
+//TODO: deactivated scream and choose one vote
+// TODO: update scream data
 
 
 module.exports = {

@@ -11,6 +11,7 @@ const {
 } = require('../util/validators')
 const FBAuth = require('../util/fbAuth')
 
+// user registration
 route.post('/signup', (req,res)=>{
     const newUser = {
         email: req.body.email,
@@ -57,6 +58,7 @@ route.post('/signup', (req,res)=>{
         })
 })
 
+// user login
 route.post('/login' , (req,res)=>{
     const user = {
         email: req.body.email,
@@ -80,6 +82,7 @@ route.post('/login' , (req,res)=>{
         })
 })
 
+// get other users handle details
 route.get('/:handle' , (req,res)=>{
     let userData = {}
     db.doc(`/users/${req.params.handle}`)
@@ -118,6 +121,7 @@ route.get('/:handle' , (req,res)=>{
         })
 })
 
+// edit Author details
 route.post('/' , FBAuth , (req,res)=>{
     let userDetails = reduceUserDetails(req.body)
     db.doc(`/users/${req.user.handle}`)
@@ -131,6 +135,7 @@ route.post('/' , FBAuth , (req,res)=>{
         })
 })
 
+// get Author details
 route.get('/' , FBAuth , (req , res)=>{
     let userData = {}
     db.doc(`users/${req.user.handle}`)
