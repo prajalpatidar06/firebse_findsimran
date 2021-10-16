@@ -6,17 +6,13 @@ const FBAuth = require('../util/fbAuth')
 // get all screams data
 route.get('/' , (req,res)=>{
     db.collection('screams')
+        .where('active','==',true)
         .orderBy('createdAt' , 'desc')
         .get()
         .then(data =>{
             let screams = []
             data.forEach(doc => {
-                screams.push({
-                   screamId: doc.id,
-                   handle: doc.data().handle,
-                   body: doc.data().body,
-                   createdAt: doc.data().createdAt
-                })
+                screams.push(doc.data())
             });
             return res.status(201).json(screams)
         })
@@ -90,7 +86,7 @@ route.post('/' , FBAuth , (req,res)=>{
         requiredSkills: req.body.requiredSkills,
         url: req.body.url,
         createdAt: new Date().toISOString(),
-        status:true,
+        active:true,
     }
 
     db.collection('screams')
@@ -163,6 +159,23 @@ route.post('/:screamId/vote' , FBAuth , (req,res)=>{
 })
 
 //TODO: deactivated scream and choose one vote
+route.post('/:screamId/:voteId' , FBAuth , (req,res)=>{
+    let screamDocument = db.doc(`screams/${req.params.screamId}`)
+    screamDocument
+        .get()
+        .then(doc =>{
+            if(doc.data().handle !== req.user.handle){
+                return req.status(403).json({error: "unauthorized"})
+            }
+            return screamDocument.update({active: false , collabWith: req.params.voteId})
+        })
+        .then(()=>{
+            db.doc(`votes/${req.params.voteId}`).update({collabRequest: true})
+        })
+        .then(()=>{
+            return res.json({messsage: "Scream status deactivated successfully"})
+        })
+})
 // TODO: update scream data
 
 

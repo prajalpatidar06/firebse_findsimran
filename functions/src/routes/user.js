@@ -143,11 +143,47 @@ route.get('/' , FBAuth , (req , res)=>{
         .then(doc =>{
             if(doc.exists){
                 userData.credentials = doc.data()
-                return res.json(userData)
+                return db
+                    .collection('notifications')
+                    .where('recipient','==',req.user.handle)
+                    .get()
             }
+        })
+        .then(data =>{
+            userData.notifications = []
+            data.forEach(doc => {
+                userData.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    read: doc.data().read,
+                    type: doc.data().type,
+                    screamId: doc.data().screamId,
+                    createdAt: doc.data().createdAt,
+                    notificationId: doc.id
+                })
+            });
+            return res.json(userData)
         })
         .catch(err =>{
             console.error(err)
+            return res.status(500).json({error: err.code})
+        })
+})
+
+// Mark notification Read
+route.post('/notifications', FBAuth , (req,res)=>{
+    let batch = db.batch()
+    req.body.forEach((notificationId)=>{
+        const notification = db.doc(`notifications/${notificationId}`)
+            batch.update(notification , {read:true})
+    })
+    batch
+        .commit()
+        .then(()=>{
+            return res.json({message: "Notifications marked read"})
+        })
+        .catch(err =>{
+            console.error(err);
             return res.status(500).json({error: err.code})
         })
 })
