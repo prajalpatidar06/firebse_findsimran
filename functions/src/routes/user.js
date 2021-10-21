@@ -42,6 +42,7 @@ route.post('/signup', (req,res)=>{
             const userCredentials = {
                 handle: newUser.handle,
                 email: newUser.email,
+                rating:0,
                 createdAt: new Date().toISOString(),
                 userId
             }
