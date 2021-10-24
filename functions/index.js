@@ -77,3 +77,31 @@ exports.onScreamDelete =functions.region('asia-east1').firestore.document('screa
             console.log(err)
         })
 })
+
+exports.onUserImageChange = functions.region('asia-east1').firestore.document('users/{userId}')
+.onUpdate((snapshot , context)=>{
+    if(snapshot.before.data().imageUrl !== snapshot.after.data().imageUrl){
+        console.log('image has changed')
+        const batch = db.batch()
+        return db.collection('screams')
+            .where('handle' , '==' , context.params.userId)
+            .get()
+            .then(data =>{
+                data.forEach(doc =>{
+                    const scream = db.doc(`/screams/${doc.id}`)
+                    batch.update(scream , {userImage: snapshot.after.data().imageUrl})
+                })
+                return db.collection('votes')
+                    .where('handle','==',context.params.userId)
+                    .get()
+            })
+            .then(data =>{
+                data.forEach(doc =>{
+                    const scream = db.doc(`/votes/${doc.id}`)
+                    batch.update(scream , {userImage: snapshot.after.data().imageUrl})
+                })
+                return batch.commit()
+            })
+    }
+    else return true
+})

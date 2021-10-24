@@ -15,7 +15,6 @@ module.exports = (req , res , next) =>{
         .verifyIdToken(idToken)
         .then( decodedToken =>{
             req.user = decodedToken
-            console.log(req.user.uid)
             return db.collection('users')
                 .where('userId','==',req.user.uid)
                 .limit(1)
@@ -25,6 +24,7 @@ module.exports = (req , res , next) =>{
 
             req.user.handle = dataset.docs[0].data().handle
             req.user.rating = dataset.docs[0].data().rating
+            req.user.imageUrl = dataset.docs[0].data().imageUrl
             return next()
         })
         .catch(err =>{

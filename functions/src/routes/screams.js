@@ -12,7 +12,17 @@ route.get('/' , (req,res)=>{
         .then(data =>{
             let screams = []
             data.forEach(doc => {
-                screams.push(doc.data())
+                screams.push({
+                    screamId: doc.id,
+                    title: doc.data.title,
+                    body: doc.data().body,
+                    url: doc.data().url,
+                    requiredSkills: doc.data().requiredSkills,
+                    handle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    rating: doc.data().rating,
+                    createdAt: doc.data().createdAt,
+                })
             });
             return res.status(201).json(screams)
         })
@@ -51,7 +61,7 @@ route.get('/:handle/:screamId' , FBAuth , (req , res)=>{
         })
 })
 
-// get all screams of specific author
+// get all screams of autherized user
 route.get('/:handle' , FBAuth , (req , res)=>{
     if(req.user.handle !== req.params.handle)
         return res.status(403).json({error: "unauthorized access"})
@@ -62,7 +72,18 @@ route.get('/:handle' , FBAuth , (req , res)=>{
         .get()
         .then(docs =>{
             docs.forEach(doc => {
-                screamData.push(doc.data())
+                screamData.push({
+                    screamId: doc.id,
+                    active: doc.data().active,
+                    title: doc.data.title,
+                    body: doc.data().body,
+                    url: doc.data().url,
+                    requiredSkills: doc.data().requiredSkills,
+                    handle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    rating: doc.data().rating,
+                    createdAt: doc.data().createdAt,
+                })
             });
             return res.status(201).json(screamData)
         })
@@ -81,6 +102,7 @@ route.post('/' , FBAuth , (req,res)=>{
     const newScream = {
         handle: req.user.handle,
         rating: req.user.rating,
+        userImage: req.user.imageUrl,
         title: req.body.title,
         body: req.body.body,
         requiredSkills: req.body.requiredSkills,
@@ -133,12 +155,13 @@ route.post('/:screamId/vote' , FBAuth , (req,res)=>{
         return res.status(400).json({comment: "Must not be empty"})
     
     const newVote = {
-        comment: req.body.comment,
-        createdAt: new Date().toISOString(),
         screamId: req.params.screamId,
         handle: req.user.handle,
+        userImage: req.user.imageUrl,
+        comment: req.body.comment,
+        skills: req.body.skills,
         collabRequest: false,
-        skills: req.body.skills
+        createdAt: new Date().toISOString()
     }
 
     db.doc(`screams/${req.params.screamId}`)
