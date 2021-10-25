@@ -99,6 +99,7 @@ route.get("/:handle", (req, res) => {
           return db
             .collection("screams")
             .where("handle", "==", req.params.handle)
+            .where('active','==',true)
             .get();
         } 
         else return res.status(400).json({ error: "user not found" });
@@ -107,15 +108,15 @@ route.get("/:handle", (req, res) => {
         userData.screams = [];
         data.forEach((doc) => {
           userData.screams.push({
-            title: doc.data().title,
-            userImage: doc.data().imageUrl,
-            body: doc.data().body,
-            createdAt: doc.data().createdAt,
-            handle: doc.data().authorHandle,
-            rating: doc.data().rating,
-            requireSkills: doc.data().requireSkills,
-            url: doc.data().url,
             screamId: doc.id,
+            userImage: doc.data().userImage,
+            handle: doc.data().handle,
+            rating: doc.data().rating,
+            title: doc.data().title,
+            body: doc.data().body,
+            requiredSkills: doc.data().requiredSkills,
+            url: doc.data().url,
+            createdAt: doc.data().createdAt,
           });
         });
         return res.json(userData);

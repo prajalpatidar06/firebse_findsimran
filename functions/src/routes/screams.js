@@ -14,11 +14,11 @@ route.get('/' , (req,res)=>{
             data.forEach(doc => {
                 screams.push({
                     screamId: doc.id,
-                    title: doc.data.title,
+                    title: doc.data().title,
                     body: doc.data().body,
                     url: doc.data().url,
                     requiredSkills: doc.data().requiredSkills,
-                    handle: doc.data().userHandle,
+                    handle: doc.data().handle,
                     userImage: doc.data().userImage,
                     rating: doc.data().rating,
                     createdAt: doc.data().createdAt,
@@ -41,12 +41,12 @@ route.get('/:handle/:screamId' , FBAuth , (req , res)=>{
     db.doc(`screams/${req.params.screamId}`)
         .get()
         .then(doc =>{
-            if(!doc.exists)
+            if(!doc.exists || doc.data().handle !== req.params.handle)
                 return res.status(404).json({error:"scream not found"})
             screamData = doc.data()
             return db.collection('votes')
                 .where('screamId','==',req.params.screamId)
-                .get()
+                .get()    
         })
         .then(data =>{
             screamData.votes = []
