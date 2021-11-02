@@ -4,6 +4,8 @@ const app = express()
 const {db} = require('./src/util/admin')
 const {ScreamRoute} = require('./src/routes/screams')
 const {UserRoute} = require('./src/routes/user')
+const cors = require('cors')
+app.use(cors())
 
 app.use('/screams', ScreamRoute)
 app.use('/user' , UserRoute)
