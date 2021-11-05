@@ -95,7 +95,7 @@ route.get('/:handle' , FBAuth , (req , res)=>{
 
 // post new scream
 route.post('/' , FBAuth , (req,res)=>{
-    if (req.body.body.trim() === '') {
+    if (req.body.length == 1 && req.body.body[0].trim() === '') {
         return res.status(400).json({ body: 'Body must not be empty' });
     }
 
