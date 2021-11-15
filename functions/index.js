@@ -21,6 +21,7 @@ exports.createNotificationOnVote = functions.region('asia-east1').firestore.docu
             return db.doc(`notifications/${context.params.id}`).set({
                     recipient: doc.data().handle,
                     sender: snapshot.data().handle,
+                    senderImage: snapshot.data().userImage,
                     read: false,
                     type: 'vote',
                     screamId: snapshot.data().screamId,
@@ -43,6 +44,7 @@ exports.createNotificationOnCollab = functions.region('asia-east1').firestore.do
            return db.doc(`notifications/${data.screamId}`).set({
                recipient: data.handle,
                sender: doc.data().handle,
+               senderImage: doc.data().userImage,
                type: "collaboration",
                read: false,
                screamId: doc.id
@@ -101,6 +103,15 @@ exports.onUserImageChange = functions.region('asia-east1').firestore.document('u
                 data.forEach(doc =>{
                     const scream = db.doc(`/votes/${doc.id}`)
                     batch.update(scream , {userImage: snapshot.after.data().imageUrl})
+                })
+                return db.collection('notifications')
+                .where('sender','==',context.params.userId)
+                .get()
+            })
+            .then(data =>{
+                data.forEach(doc =>{
+                    const scream = db.doc(`/notifications/${doc.id}`)
+                    batch.update(scream , {senderImage: snapshot.after.data().imageUrl})
                 })
                 return batch.commit()
             })

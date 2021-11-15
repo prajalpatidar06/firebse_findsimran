@@ -210,6 +210,7 @@ route.get("/", FBAuth, (req, res) => {
         userData.notifications.push({
           recipient: doc.data().recipient,
           sender: doc.data().sender,
+          senderImage: doc.data().senderImage,
           read: doc.data().read,
           type: doc.data().type,
           screamId: doc.data().screamId,
