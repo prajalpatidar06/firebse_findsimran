@@ -46,14 +46,14 @@ function validateLogindata(data) {
 
 function reduceUserDetails(data) {
   let userDetails = {};
-  console.log(data);
-  if (!isEmpty(data.bio.trim())) userDetails.bio = data.bio;
-  if (!isEmpty(data.website.trim())) {
+  if (data.bio && !isEmpty(data.bio.trim())) userDetails.bio = data.bio;
+  if (data.website && !isEmpty(data.website.trim())) {
     if (data.website.trim().substring(0, 4) !== "http")
       userDetails.website = `http://${data.website.trim()}`;
     else userDetails.website = data.website;
   }
-  if (!isEmpty(data.gender.trim())) userDetails.gender = data.gender;
+  if (data.gender && !isEmpty(data.gender.trim()))
+    userDetails.gender = data.gender;
   if (data.contactNumber && !isEmpty(data.contactNumber.trim()))
     userDetails.contactNumber = data.contactNumber;
   if (data.name && !isEmpty(data.name.trim())) userDetails.name = data.name;
@@ -62,18 +62,21 @@ function reduceUserDetails(data) {
   if (data.city && !isEmpty(data.city.trim())) userDetails.city = data.city;
   if (data.state && !isEmpty(data.state.trim())) userDetails.state = data.state;
 
-  userDetails.skills = [];
-  data.skills.forEach((skill) => {
-    if (!isEmpty(skill.trim())) userDetails.skills.push(skill);
-  });
+  if (data.skills.length > 0) {
+    userDetails.skills = [];
+    data.skills.forEach((skill) => {
+      if (!isEmpty(skill.trim())) userDetails.skills.push(skill);
+    });
+  }
 
-  if (data.projects) {
+  if (data.projects.length > 0) {
     userDetails.projects = [];
     data.projects.forEach((project) => {
       if (!isEmpty(project.trim())) userDetails.projects.push(project);
     });
   }
-  if(data.onlinePlateform) userDetails.onlinePlateform = data.onlinePlateform;
+  if (Object.keys(data.onlinePlateform).length !== 0) userDetails.onlinePlateform = data.onlinePlateform;
+  console.log(userDetails)
   return userDetails;
 }
 
