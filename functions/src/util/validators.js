@@ -12,7 +12,7 @@ const isEmpty = (string) => {
   else return false;
 };
 
-function validateSignupData(data){
+function validateSignupData(data) {
   let errors = {};
 
   if (isEmpty(data.email)) {
@@ -30,42 +30,55 @@ function validateSignupData(data){
     errors,
     valid: Object.keys(errors).length === 0 ? true : false,
   };
-};
+}
 
-function validateLogindata(data){
+function validateLogindata(data) {
   let errors = {};
 
-  if (isEmpty(data.email)) errors.email = 'Must not be empty';
-  if (isEmpty(data.password)) errors.password = 'Must not be empty';
+  if (isEmpty(data.email)) errors.email = "Must not be empty";
+  if (isEmpty(data.password)) errors.password = "Must not be empty";
 
   return {
     errors,
-    valid: Object.keys(errors).length === 0 ? true : false
+    valid: Object.keys(errors).length === 0 ? true : false,
   };
 }
 
-function reduceUserDetails(data){
+function reduceUserDetails(data) {
   let userDetails = {};
-
+  console.log(data);
   if (!isEmpty(data.bio.trim())) userDetails.bio = data.bio;
   if (!isEmpty(data.website.trim())) {
-    if (data.website.trim().substring(0, 4) !== 'http') userDetails.website = `http://${data.website.trim()}`
+    if (data.website.trim().substring(0, 4) !== "http")
+      userDetails.website = `http://${data.website.trim()}`;
     else userDetails.website = data.website;
   }
   if (!isEmpty(data.gender.trim())) userDetails.gender = data.gender;
-  if (!isEmpty(data.contactNumber.trim())) userDetails.contacNumber = data.contacNumber;
-  userDetails.skills = []
-  data.skills.forEach(skill => {
-    if (!isEmpty(skill.trim())) userDetails.skills.push(skill)
-  });
-  userDetails.onlinePlateform = data.onlinePlateform
-  userDetails.rating = 0
+  if (data.contactNumber && !isEmpty(data.contactNumber.trim()))
+    userDetails.contactNumber = data.contactNumber;
+  if (data.name && !isEmpty(data.name.trim())) userDetails.name = data.name;
+  if (data.collage && !isEmpty(data.collage.trim()))
+    userDetails.collage = data.collage;
+  if (data.city && !isEmpty(data.city.trim())) userDetails.city = data.city;
+  if (data.state && !isEmpty(data.state.trim())) userDetails.state = data.state;
 
+  userDetails.skills = [];
+  data.skills.forEach((skill) => {
+    if (!isEmpty(skill.trim())) userDetails.skills.push(skill);
+  });
+
+  if (data.projects) {
+    userDetails.projects = [];
+    data.projects.forEach((project) => {
+      if (!isEmpty(project.trim())) userDetails.projects.push(project);
+    });
+  }
+  if(data.onlinePlateform) userDetails.onlinePlateform = data.onlinePlateform;
   return userDetails;
 }
 
 module.exports = {
-    validateSignupData,
-    validateLogindata,
-    reduceUserDetails
-}
+  validateSignupData,
+  validateLogindata,
+  reduceUserDetails,
+};
