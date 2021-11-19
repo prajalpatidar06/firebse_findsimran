@@ -69,6 +69,7 @@ route.get('/:handle' , FBAuth , (req , res)=>{
     let screamData = []
     db.collection('screams')
         .where('handle','==',req.params.handle)
+        .orderBy('createdAt' , 'desc')
         .get()
         .then(docs =>{
             docs.forEach(doc => {
@@ -95,7 +96,7 @@ route.get('/:handle' , FBAuth , (req , res)=>{
 
 // post new scream
 route.post('/' , FBAuth , (req,res)=>{
-    if (req.body.length == 1 && req.body.body[0].trim() === '') {
+    if (req.body.body.length == 1 && req.body.body[0].trim() === '') {
         return res.status(400).json({ body: 'Body must not be empty' });
     }
 
@@ -151,8 +152,9 @@ route.delete('/:screamId' , FBAuth , (req,res)=>{
 
 // vote perticular scream
 route.post('/:screamId/vote' , FBAuth , (req,res)=>{
-    if(req.body.comment.trim() === '')
-        return res.status(400).json({comment: "Must not be empty"})
+    if (req.body.comment.length == 1 && req.body.comment[0].trim() === '') {
+        return res.status(400).json({ comment: 'comment must not be empty' });
+    }
     
     const newVote = {
         screamId: req.params.screamId,

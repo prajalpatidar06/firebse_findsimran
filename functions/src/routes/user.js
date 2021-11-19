@@ -100,6 +100,7 @@ route.get("/:handle", (req, res) => {
             .collection("screams")
             .where("handle", "==", req.params.handle)
             .where('active','==',true)
+            .orderBy('createdAt' , 'desc')
             .get();
         } 
         else return res.status(400).json({ error: "user not found" });
@@ -201,6 +202,7 @@ route.get("/", FBAuth, (req, res) => {
         return db
           .collection("notifications")
           .where("recipient", "==", req.user.handle)
+          .orderBy('createdAt' , 'desc')
           .get();
       }
     })

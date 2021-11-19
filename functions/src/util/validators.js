@@ -46,6 +46,7 @@ function validateLogindata(data) {
 
 function reduceUserDetails(data) {
   let userDetails = {};
+  console.log(data)
   if (data.bio && !isEmpty(data.bio.trim())) userDetails.bio = data.bio;
   if (data.website && !isEmpty(data.website.trim())) {
     if (data.website.trim().substring(0, 4) !== "http")
@@ -62,21 +63,21 @@ function reduceUserDetails(data) {
   if (data.city && !isEmpty(data.city.trim())) userDetails.city = data.city;
   if (data.state && !isEmpty(data.state.trim())) userDetails.state = data.state;
 
-  if (data.skills.length > 0) {
-    userDetails.skills = [];
+  userDetails.skills = [];
+  if (data.skills && data.skills.length > 0)
     data.skills.forEach((skill) => {
       if (!isEmpty(skill.trim())) userDetails.skills.push(skill);
     });
-  }
 
-  if (data.projects.length > 0) {
-    userDetails.projects = [];
+  userDetails.projects = [];
+  if (data.projects && data.projects.length > 0)
     data.projects.forEach((project) => {
       if (!isEmpty(project.trim())) userDetails.projects.push(project);
     });
-  }
-  if (Object.keys(data.onlinePlateform).length !== 0) userDetails.onlinePlateform = data.onlinePlateform;
-  console.log(userDetails)
+
+  if (data.onlinePlateform && Object.keys(data.onlinePlateform).length !== 0)
+    userDetails.onlinePlateform = data.onlinePlateform;
+  else userDetails.onlinePlateform = {};
   return userDetails;
 }
 
