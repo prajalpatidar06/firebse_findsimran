@@ -94,37 +94,36 @@ route.get("/:handle", (req, res) => {
   db.doc(`/users/${req.params.handle}`)
     .get()
     .then((doc) => {
-        if (doc.exists){
-          userData = doc.data();
-          return db
-            .collection("screams")
-            .where("handle", "==", req.params.handle)
-            .where('active','==',true)
-            .orderBy('createdAt' , 'desc')
-            .get();
-        } 
-        else return res.status(400).json({ error: "user not found" });
+      if (doc.exists) {
+        userData = doc.data();
+        return db
+          .collection("screams")
+          .where("handle", "==", req.params.handle)
+          .where("active", "==", true)
+          .orderBy("createdAt", "desc")
+          .get();
+      } else return res.status(400).json({ error: "user not found" });
     })
     .then((data) => {
-        userData.screams = [];
-        data.forEach((doc) => {
-          userData.screams.push({
-            screamId: doc.id,
-            userImage: doc.data().userImage,
-            handle: doc.data().handle,
-            rating: doc.data().rating,
-            title: doc.data().title,
-            body: doc.data().body,
-            requiredSkills: doc.data().requiredSkills,
-            url: doc.data().url,
-            createdAt: doc.data().createdAt,
-          });
+      userData.screams = [];
+      data.forEach((doc) => {
+        userData.screams.push({
+          screamId: doc.id,
+          userImage: doc.data().userImage,
+          handle: doc.data().handle,
+          rating: doc.data().rating,
+          title: doc.data().title,
+          body: doc.data().body,
+          requiredSkills: doc.data().requiredSkills,
+          url: doc.data().url,
+          createdAt: doc.data().createdAt,
         });
-        return res.json(userData);
+      });
+      return res.json(userData);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
-      return res.status(500).json({error: err.code});
+      return res.status(500).json({ error: err.code });
     });
 });
 
@@ -141,6 +140,25 @@ route.post("/", FBAuth, (req, res) => {
       return res.status(500).json({ error: err.code });
     });
 });
+
+// delete previous image
+function updateNewImage(handle) {
+  db.doc(`users/${handle}`)
+    .get()
+    .then((doc) => {
+      if (
+        doc.data().imageUrl !==
+        "https://firebasestorage.googleapis.com/v0/b/findcodingpartner.appspot.com/o/noImg.png?alt=media"
+      ) {
+        const path = doc.data().imageUrl.split('?')[0].split('/')[doc.data().imageUrl.split('?')[0].split('/').length - 1]
+        return admin.storage().bucket().file(path).delete();
+      }
+    })
+    .then(() => {
+      console.log("delete file");
+    })
+    .catch((err) => console.log(err.code));
+}
 
 // post image of author
 route.post("/image", FBAuth, (req, res) => {
@@ -177,6 +195,9 @@ route.post("/image", FBAuth, (req, res) => {
         },
       })
       .then(() => {
+        return updateNewImage(req.user.handle);
+      })
+      .then(() => {
         const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
         return db.doc(`/users/${req.user.handle}`).update({ imageUrl });
       })
@@ -202,7 +223,7 @@ route.get("/", FBAuth, (req, res) => {
         return db
           .collection("notifications")
           .where("recipient", "==", req.user.handle)
-          .orderBy('createdAt' , 'desc')
+          .orderBy("createdAt", "desc")
           .get();
       }
     })
