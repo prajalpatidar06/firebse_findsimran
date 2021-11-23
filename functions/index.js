@@ -4,11 +4,13 @@ const app = express()
 const {db} = require('./src/util/admin')
 const {ScreamRoute} = require('./src/routes/screams')
 const {UserRoute} = require('./src/routes/user')
+const {VoteRoute} = require('./src/routes/votes')
 const cors = require('cors')
 app.use(cors())
 
 app.use('/screams', ScreamRoute)
 app.use('/user' , UserRoute)
+app.use('/votes',VoteRoute)
 
 
 exports.api = functions.region('asia-east1').https.onRequest(app)
@@ -80,6 +82,13 @@ exports.onScreamDelete =functions.region('asia-east1').firestore.document('screa
         .catch(err =>{
             console.log(err)
         })
+})
+
+exports.onVoteDelete =functions.region('asia-east1').firestore.document('votes/{voteId}')
+.onDelete((snapshot,context)=>{
+    const voteId = context.params.voteId
+    const batch  = db.batch()
+    return db.doc(`notifications/${voteId}`).delete()
 })
 
 exports.onUserImageChange = functions.region('asia-east1').firestore.document('users/{userId}')

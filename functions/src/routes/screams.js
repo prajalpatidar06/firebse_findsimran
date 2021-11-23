@@ -20,7 +20,6 @@ route.get("/", (req, res) => {
           requiredSkills: doc.data().requiredSkills,
           handle: doc.data().handle,
           userImage: doc.data().userImage,
-          rating: doc.data().rating,
           createdAt: doc.data().createdAt,
         });
       });
@@ -83,7 +82,6 @@ route.get("/:handle", FBAuth, (req, res) => {
           requiredSkills: doc.data().requiredSkills,
           handle: doc.data().userHandle,
           userImage: doc.data().userImage,
-          rating: doc.data().rating,
           createdAt: doc.data().createdAt,
         });
       });
@@ -100,10 +98,8 @@ route.post("/", FBAuth, (req, res) => {
   if (req.body.body.length == 1 && req.body.body[0].trim() === "") {
     return res.status(400).json({ body: "Body must not be empty" });
   }
-
   const newScream = {
     handle: req.user.handle,
-    rating: req.user.rating,
     userImage: req.user.imageUrl,
     title: req.body.title,
     body: req.body.body,
@@ -115,6 +111,48 @@ route.post("/", FBAuth, (req, res) => {
 
   db.collection("screams")
     .add(newScream)
+    .then((doc) => {
+      const resScream = newScream;
+      resScream.screamId = doc.id;
+      return res.json(resScream);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: "something went wrong" });
+    });
+});
+
+// update scream
+route.put("/:screamId", FBAuth, (req, res) => {
+  if (req.body.body.length == 1 && req.body.body[0].trim() === "") {
+    return res.status(400).json({ body: "Body must not be empty" });
+  }
+
+  const newScream = {
+    handle: req.user.handle,
+    userImage: req.user.imageUrl,
+    title: req.body.title,
+    body: req.body.body,
+    requiredSkills: req.body.requiredSkills,
+    url: req.body.url,
+    createdAt: new Date().toISOString(),
+    active: true,
+  };
+
+  const document = db.doc(`screams/${req.params.screamId}`);
+
+  document
+    .get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "scream not found" });
+      }
+      if (doc.data().handle !== req.user.handle) {
+        return res.status(403).json({ error: "unauthorized" });
+      } else {
+        return document.update(newScream);
+      }
+    })
     .then((doc) => {
       const resScream = newScream;
       resScream.screamId = doc.id;
@@ -150,39 +188,6 @@ route.delete("/:screamId", FBAuth, (req, res) => {
     });
 });
 
-// vote perticular scream
-route.post("/:screamId/vote", FBAuth, (req, res) => {
-  if (req.body.comment.length == 1 && req.body.comment[0].trim() === "") {
-    return res.status(400).json({ comment: "comment must not be empty" });
-  }
-
-  const newVote = {
-    screamId: req.params.screamId,
-    handle: req.user.handle,
-    userImage: req.user.imageUrl,
-    comment: req.body.comment,
-    skills: req.body.skills,
-    collabRequest: false,
-    createdAt: new Date().toISOString(),
-  };
-
-  db.doc(`screams/${req.params.screamId}`)
-    .get()
-    .then((doc) => {
-      if (!doc.exists) {
-        return res.status(404).json({ error: "Scream not found" });
-      }
-      return db.collection("votes").add(newVote);
-    })
-    .then(() => {
-      return res.json(newVote);
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err.code });
-    });
-});
-
 //accept collab request
 route.post("/:screamId/:voteId", FBAuth, (req, res) => {
   let screamDocument = db.doc(`screams/${req.params.screamId}`);
@@ -204,8 +209,43 @@ route.post("/:screamId/:voteId", FBAuth, (req, res) => {
     });
 });
 
+// delete vote by screamAuthor or voteAuthor
+route.delete("/:screamId/:voteId", FBAuth, (req, res) => {
+  const ScreamDoc = db.doc(`screams/${req.params.screamId}`);
+  const VoteDoc = db.doc(`votes/${req.params.voteId}`);
+  let screamHandle;
+  ScreamDoc.get()
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "scream not found" });
+      }
+      screamHandle = doc.data().handle;
+      return VoteDoc.get();
+    })
+    .then((doc) => {
+      if (!doc.exists) {
+        return res.status(404).json({ error: "vote not found" });
+      }
+      if (
+        doc.data().handle !== req.user.handle &&
+        screamHandle !== req.user.handle
+      ) {
+        return res.status(403).json({ error: "unauthorized" });
+      } else {
+        return VoteDoc.delete();
+      }
+    })
+    .then(() => {
+      res.json({ messsage: "Vote removed successfully" });
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).json({ error: err.code });
+    });
+});
+
 // update scream status
-route.post("/:screamId/:status", FBAuth, (req, res) => {
+route.put("/:screamId/:status", FBAuth, (req, res) => {
   let screamDocument = db.doc(`screams/${req.params.screamId}`);
   screamDocument
     .get()

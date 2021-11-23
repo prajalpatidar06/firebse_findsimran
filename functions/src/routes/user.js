@@ -42,7 +42,6 @@ route.post("/signup", (req, res) => {
       const userCredentials = {
         handle: newUser.handle,
         email: newUser.email,
-        rating: 0,
         imageUrl: `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/noImg.png?alt=media`,
         createdAt: new Date().toISOString(),
         userId,
@@ -111,7 +110,6 @@ route.get("/:handle", (req, res) => {
           screamId: doc.id,
           userImage: doc.data().userImage,
           handle: doc.data().handle,
-          rating: doc.data().rating,
           title: doc.data().title,
           body: doc.data().body,
           requiredSkills: doc.data().requiredSkills,
