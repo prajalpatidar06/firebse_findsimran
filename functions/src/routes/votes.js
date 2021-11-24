@@ -12,8 +12,26 @@ async function getScreamOfVote(docs, res) {
         .get()
         .then((data) => {
           voteData.push({
-            scream: data.data(),
-            vote: doc.data(),
+            scream: {
+              screamId: data.id,
+              title: data.data().title,
+              body: data.data().body,
+              url: data.data().url,
+              requiredSkills: data.data().requiredSkills,
+              handle: data.data().handle,
+              userImage: data.data().userImage,
+              createdAt: data.data().createdAt,
+            },
+            vote: {
+              voteId: doc.id,
+              collabRequest: doc.data().collabRequest,
+              comment: doc.data().comment,
+              skills: doc.data().skills,
+              handle: doc.data().handle,
+              userImage: doc.data().userImage,
+              createdAt: doc.data().createdAt,
+              screamId: doc.data().screamId,
+            },
           });
           if (++i === docs._size) {
             resolve("done");
@@ -30,7 +48,7 @@ async function getScreamOfVote(docs, res) {
 route.get("/", FBAuth, (req, res) => {
   db.collection("votes")
     .where("handle", "==", req.user.handle)
-    .orderBy("createdAt","desc")
+    .orderBy("createdAt", "desc")
     .get()
     .then((docs) => {
       return getScreamOfVote(docs, res);

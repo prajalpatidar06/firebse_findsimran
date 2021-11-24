@@ -42,7 +42,16 @@ route.get("/:handle/:screamId", FBAuth, (req, res) => {
     .then((doc) => {
       if (!doc.exists || doc.data().handle !== req.params.handle)
         return res.status(404).json({ error: "scream not found" });
-      screamData = doc.data();
+      screamData = {
+        screamId: doc.id,
+        title: doc.data().title,
+        body: doc.data().body,
+        url: doc.data().url,
+        requiredSkills: doc.data().requiredSkills,
+        handle: doc.data().handle,
+        userImage: doc.data().userImage,
+        createdAt: doc.data().createdAt,
+      };
       return db
         .collection("votes")
         .where("screamId", "==", req.params.screamId)
@@ -51,7 +60,16 @@ route.get("/:handle/:screamId", FBAuth, (req, res) => {
     .then((data) => {
       screamData.votes = [];
       data.forEach((doc) => {
-        screamData.votes.push(doc.data());
+        screamData.votes.push({
+          voteId: doc.id,
+          collabRequest: doc.data().collabRequest,
+          comment: doc.data().comment,
+          skills: doc.data().skills,
+          handle: doc.data().handle,
+          userImage: doc.data().userImage,
+          createdAt: doc.data().createdAt,
+          screamId: doc.data().screamId,
+        });
       });
       return res.json(screamData);
     })
@@ -76,7 +94,7 @@ route.get("/:handle", FBAuth, (req, res) => {
         screamData.push({
           screamId: doc.id,
           active: doc.data().active,
-          title: doc.data.title,
+          title: doc.data().title,
           body: doc.data().body,
           url: doc.data().url,
           requiredSkills: doc.data().requiredSkills,
