@@ -145,6 +145,27 @@ route.get("/:handle", (req, res) => {
     });
 });
 
+// get all users details
+route.get("/users/getall" , (req,res)=>{
+  let users = []
+  db.collection('users')
+    .get()
+    .then((data)=>{
+      data.forEach(doc => {
+        users.push({
+          handle:doc.data().handle,
+          imageUrl: doc.data().imageUrl,
+          name: doc.data().name,
+          email: doc.data().email,
+        })
+      })
+      res.status(201).json(users)
+    })
+    .catch(err =>{
+      res.status(500).json({error: err.code})
+    })
+})
+
 // edit Author details
 route.post("/", FBAuth, (req, res) => {
   let userDetails = reduceUserDetails(req.body);
