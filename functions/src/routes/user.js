@@ -117,6 +117,26 @@ route.get("/:handle", (req, res) => {
           createdAt: doc.data().createdAt,
         });
       });
+      return db
+        .collection("projects")
+        .where("handle", "==", req.params.handle)
+        .orderBy("createdAt", "desc")
+        .get();
+    })
+    .then((data) => {
+      userData.projects = [];
+      data.forEach((doc) => {
+        userData.projects.push({
+          projectId: doc.id,
+          userImage: doc.data().userImage,
+          handle: doc.data().handle,
+          title: doc.data().title,
+          body: doc.data().body,
+          techUsed: doc.data().techUsed,
+          url: doc.data().url,
+          createdAt: doc.data().createdAt,
+        });
+      });
       return res.json(userData);
     })
     .catch((err) => {
@@ -148,7 +168,9 @@ function updateNewImage(handle) {
         doc.data().imageUrl !==
         "https://firebasestorage.googleapis.com/v0/b/findcodingpartner.appspot.com/o/noImg.png?alt=media"
       ) {
-        const path = doc.data().imageUrl.split('?')[0].split('/')[doc.data().imageUrl.split('?')[0].split('/').length - 1]
+        const path = doc.data().imageUrl.split("?")[0].split("/")[
+          doc.data().imageUrl.split("?")[0].split("/").length - 1
+        ];
         return admin.storage().bucket().file(path).delete();
       }
     })
