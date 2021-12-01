@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const route = Router();
-const { db } = require("../util/admin");
+const { db } = require("../util/firebase-config");
 const FBAuth = require("../util/fbAuth");
 
 // get all screams data

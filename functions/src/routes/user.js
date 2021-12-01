@@ -1,4 +1,4 @@
-const { admin, db } = require("../util/admin");
+const { admin, db } = require("../util/firebase-config");
 const config = require("../util/config");
 const { Router } = require("express");
 const firebase = require("firebase");
@@ -60,6 +60,23 @@ route.post("/signup", (req, res) => {
           .json({ error: "Something went wrong , Please try again later" });
     });
 });
+
+// google account registration
+route.post("/signupWithGoogle" , FBAuth , (req,res)=>{
+  console.log('creating new user')
+  const userCredentials = {
+    handle: req.user.handle,
+    name: req.user.name,
+    email: req.user.email,
+    imageUrl: req.user.imageUrl,
+    createdAt: new Date().toISOString(),
+    userId: req.user.uid,
+  };
+  db.doc(`/users/${userCredentials.handle}`).set(userCredentials)
+    .then(()=>{
+      res.status(201).json({message: "Account created successfully"})
+    })
+})
 
 // user login
 route.post("/login", (req, res) => {
@@ -188,6 +205,7 @@ function updateNewImage(handle) {
       if (
         doc.data().imageUrl !==
         "https://firebasestorage.googleapis.com/v0/b/findcodingpartner.appspot.com/o/noImg.png?alt=media"
+        && doc.data().imageUrl.split('.')[0] === "https://firebasestorage"
       ) {
         const path = doc.data().imageUrl.split("?")[0].split("/")[
           doc.data().imageUrl.split("?")[0].split("/").length - 1

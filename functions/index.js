@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const express = require('express')
 const app = express()
-const {db} = require('./src/util/admin')
+const {db} = require('./src/util/firebase-config')
 const {ScreamRoute} = require('./src/routes/screams')
 const {UserRoute} = require('./src/routes/user')
 const {VoteRoute} = require('./src/routes/votes')
@@ -114,6 +114,15 @@ exports.onUserImageChange = functions.region('asia-east1').firestore.document('u
                 data.forEach(doc =>{
                     const scream = db.doc(`/votes/${doc.id}`)
                     batch.update(scream , {userImage: snapshot.after.data().imageUrl})
+                })
+                return db.collection('projects')
+                .where('handle','==',context.params.userId)
+                .get()
+            })
+            .then(data =>{
+                data.forEach(doc =>{
+                    const project = db.doc(`/projects/${doc.id}`)
+                    batch.update(project , {userImage: snapshot.after.data().imageUrl})
                 })
                 return db.collection('notifications')
                 .where('sender','==',context.params.userId)
