@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const route = Router();
-const { db } = require("../util/firebase-config");
+const {admin , db } = require("../util/firebase-config");
 const FBAuth = require("../util/fbAuth");
 
 // get all screams data
@@ -214,16 +214,30 @@ route.post("/:screamId/:voteId", FBAuth, (req, res) => {
     .then((doc) => {
       if (doc.data().handle !== req.user.handle) {
         return req.status(403).json({ error: "unauthorized" });
+      } else {
+        return db
+          .doc(`votes/${req.params.voteId}`)
+          .get()
+          .then((dc) => {
+            return db
+              .doc(`chats/${req.params.screamId}`)
+              .update({
+                members: admin.firestore.FieldValue.arrayUnion(
+                  dc.data().handle
+                ),
+              })
+              .then(() => {
+                db.doc(`votes/${req.params.voteId}`)
+                  .update({ collabRequest: true })
+                  .then(() => {
+                    res.json({ message: "collab req accepted" });
+                  });
+              });
+          });
       }
-      return screamDocument.update({
-        collabWith: req.params.voteId,
-      });
     })
-    .then(() => {
-      db.doc(`votes/${req.params.voteId}`).update({ collabRequest: true });
-    })
-    .then(() => {
-      return res.json({ messsage: "Collab request accepted successfully" });
+    .catch((err) => {
+      res.status(500).json({ error: err.code });
     });
 });
 

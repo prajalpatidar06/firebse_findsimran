@@ -62,8 +62,7 @@ route.post("/signup", (req, res) => {
 });
 
 // google account registration
-route.post("/signupWithGoogle" , FBAuth , (req,res)=>{
-  console.log('creating new user')
+route.post("/signupWithGoogle", FBAuth, (req, res) => {
   const userCredentials = {
     handle: req.user.handle,
     name: req.user.name,
@@ -72,11 +71,12 @@ route.post("/signupWithGoogle" , FBAuth , (req,res)=>{
     createdAt: new Date().toISOString(),
     userId: req.user.uid,
   };
-  db.doc(`/users/${userCredentials.handle}`).set(userCredentials)
-    .then(()=>{
-      res.status(201).json({message: "Account created successfully"})
-    })
-})
+  db.doc(`/users/${userCredentials.handle}`)
+    .set(userCredentials)
+    .then(() => {
+      res.status(201).json({ message: "Account created successfully" });
+    });
+});
 
 // user login
 route.post("/login", (req, res) => {
@@ -163,25 +163,25 @@ route.get("/:handle", (req, res) => {
 });
 
 // get all users details
-route.get("/users/getall" , (req,res)=>{
-  let users = []
-  db.collection('users')
+route.get("/users/getall", (req, res) => {
+  let users = [];
+  db.collection("users")
     .get()
-    .then((data)=>{
-      data.forEach(doc => {
+    .then((data) => {
+      data.forEach((doc) => {
         users.push({
-          handle:doc.data().handle,
+          handle: doc.data().handle,
           imageUrl: doc.data().imageUrl,
           name: doc.data().name,
           email: doc.data().email,
-        })
-      })
-      res.status(201).json(users)
+        });
+      });
+      res.status(201).json(users);
     })
-    .catch(err =>{
-      res.status(500).json({error: err.code})
-    })
-})
+    .catch((err) => {
+      res.status(500).json({ error: err.code });
+    });
+});
 
 // edit Author details
 route.post("/", FBAuth, (req, res) => {
@@ -198,14 +198,14 @@ route.post("/", FBAuth, (req, res) => {
 });
 
 // delete previous image
-function updateNewImage(handle) {
-  db.doc(`users/${handle}`)
+let updateNewImage = async (handle) => {
+  return db.doc(`users/${handle}`)
     .get()
     .then((doc) => {
       if (
         doc.data().imageUrl !==
-        "https://firebasestorage.googleapis.com/v0/b/findcodingpartner.appspot.com/o/noImg.png?alt=media"
-        && doc.data().imageUrl.split('.')[0] === "https://firebasestorage"
+          "https://firebasestorage.googleapis.com/v0/b/findcodingpartner.appspot.com/o/noImg.png?alt=media" &&
+        doc.data().imageUrl.split(".")[0] === "https://firebasestorage"
       ) {
         const path = doc.data().imageUrl.split("?")[0].split("/")[
           doc.data().imageUrl.split("?")[0].split("/").length - 1
@@ -213,14 +213,12 @@ function updateNewImage(handle) {
         return admin.storage().bucket().file(path).delete();
       }
     })
-    .then(() => {
-      console.log("delete file");
-    })
     .catch((err) => console.log(err.code));
 }
 
 // post image of author
 route.post("/image", FBAuth, (req, res) => {
+  console.log("request recieved");
   const BusBoy = require("busboy");
   const path = require("path");
   const os = require("os");
@@ -254,14 +252,13 @@ route.post("/image", FBAuth, (req, res) => {
         },
       })
       .then(() => {
-        return updateNewImage(req.user.handle);
+        return updateNewImage(req.user.handle).then(() => {
+          const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
+          return db.doc(`/users/${req.user.handle}`).update({ imageUrl });
+        });
       })
-      .then(() => {
-        const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${config.storageBucket}/o/${imageFileName}?alt=media`;
-        return db.doc(`/users/${req.user.handle}`).update({ imageUrl });
-      })
-      .then(() => {
-        return res.json({ message: "Image uploaded successfully" });
+      .then(()=>{
+        res.json({message:"Profile updated successfully"})
       })
       .catch((err) => {
         console.log(err);
@@ -284,6 +281,8 @@ route.get("/", FBAuth, (req, res) => {
           .where("recipient", "==", req.user.handle)
           .orderBy("createdAt", "desc")
           .get();
+      } else {
+        throw "no user found";
       }
     })
     .then((data) => {
