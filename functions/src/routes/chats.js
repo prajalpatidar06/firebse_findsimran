@@ -109,7 +109,7 @@ route.put("/:groupId/removeMember", FBAuth, (req, res) => {
             ),
           })
           .then(() => {
-            db.doc(`users/${req.body.removeMember}`).update({groups})
+            db.doc(`users/${req.body.removeMember}`).update({ groups });
             res.json({ message: "Member removed successfully" });
           });
       }
@@ -125,17 +125,27 @@ route.put("/:groupId/leave", FBAuth, (req, res) => {
   document
     .get()
     .then((doc) => {
-      if (doc.data().admin !== req.user.handle) {
-        res.status(400).json({ error: "unauthorized user" });
+      if (doc.data().admin === req.user.handle) {
+        db.doc(`screams/${groupId}`)
+          .delete()
+          .then(() => {
+            res.json({ message: "you successfully left group" });
+          });
       } else {
-        document
+        db.doc(`users/${req.user.handle}`)
           .update({
-            members: admin.firestore.FieldValue.arrayRemove(
-              req.body.removeMember
-            ),
+            groups: admin.firestore.FieldValue.arrayRemove(req.params.groupId),
           })
           .then(() => {
-            res.json({ message: "Group name edited successfully" });
+            document
+              .update({
+                members: admin.firestore.FieldValue.arrayRemove(
+                  req.user.handle
+                ),
+              })
+              .then(() => {
+                res.json({ message: "you successfully left group" });
+              });
           });
       }
     })
