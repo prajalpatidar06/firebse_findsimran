@@ -48,6 +48,7 @@ exports.createNotificationOnCollab = functions
   .firestore.document("votes/{id}")
   .onUpdate((snapshot, context) => {
     const data = snapshot.after.data();
+    console.log(data.screamId);
     return db
       .doc(`/screams/${data.screamId}`)
       .get()
@@ -62,9 +63,6 @@ exports.createNotificationOnCollab = functions
             screamId: doc.id,
           });
         }
-      })
-      .catch((err) => {
-        console.log(err);
       });
   });
 
@@ -80,7 +78,7 @@ exports.onScreamDelete = functions
       .get()
       .then((data) => {
         data.forEach((doc) => {
-          batch.delete(db.doc(`/votes/${doc.id}`));
+          batch.delete(db.doc(`votes/${doc.id}`));
         });
         return db
           .collection("notifications")
@@ -89,18 +87,19 @@ exports.onScreamDelete = functions
       })
       .then((data) => {
         data.forEach((doc) => {
-          batch.delete(db.doc(`/notifications/${doc.id}`));
+          batch.delete(db.doc(`notifications/${doc.id}`));
         });
-        return db.doc(`chats/${context.params.screamId}`).get();
-      })
-      .then((doc) => {
-        doc.data().members.forEach((member) => {
-          db.doc(`users/${member}`).update({
-            groups: admin.firestore.FieldValue.arrayRemove(
-              context.params.screamId
-            ),
+        return db
+          .doc(`chats/${context.params.screamId}`)
+          .get()
+          .then((doc) => {
+            let GroupRemove = `${doc.id}{~!@#$%^&*()_+}${doc.data().groupName}`;
+            doc.data().members.forEach((member) => {
+              db.doc(`users/${member}`).update({
+                groups: admin.firestore.FieldValue.arrayRemove(GroupRemove),
+              });
+            });
           });
-        });
       })
       .then(() => {
         return db
@@ -237,9 +236,10 @@ exports.CreateGroupOnScreamPost = functions
       .doc(`chats/${context.params.screamId}`)
       .set(messageObject)
       .then(() => {
+        let GroupCreate = `${context.params.screamId}{~!@#$%^&*()_+}${context.params.screamId}`
         db.doc(`users/${snapshot.data().handle}`).update({
           groups: admin.firestore.FieldValue.arrayUnion(
-            context.params.screamId
+            GroupCreate
           ),
         });
       });

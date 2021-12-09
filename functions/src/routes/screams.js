@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const route = Router();
-const {admin , db } = require("../util/firebase-config");
+const { admin, db } = require("../util/firebase-config");
 const FBAuth = require("../util/fbAuth");
 
 // get all screams data
@@ -208,7 +208,8 @@ route.delete("/:screamId", FBAuth, (req, res) => {
 
 //accept collab request
 route.post("/:screamId/:voteId", FBAuth, (req, res) => {
-  let screamDocument = db.doc(`screams/${req.params.screamId}`);
+  console.log('entering')
+  let screamDocument = db.doc(`screams/${req.params.screamId}`)
   screamDocument
     .get()
     .then((doc) => {
@@ -227,16 +228,25 @@ route.post("/:screamId/:voteId", FBAuth, (req, res) => {
                 ),
               })
               .then(() => {
-                db.doc(`votes/${req.params.voteId}`)
-                  .update({ collabRequest: true })
+                db.doc(`users/${dc.data().handle}`)
+                  .update({
+                    groups: admin.firestore.FieldValue.arrayUnion(
+                      `${req.params.screamId}{~!@#$%^&*()_+}${req.params.screamId}`
+                    ),
+                  })
                   .then(() => {
-                    res.json({ message: "collab req accepted" });
+                    db.doc(`votes/${req.params.voteId}`)
+                      .update({ collabRequest: true })
+                      .then(() => {
+                        res.json({ message: "collab req accepted" });
+                      });
                   });
               });
           });
       }
     })
     .catch((err) => {
+      console.log(err)
       res.status(500).json({ error: err.code });
     });
 });
